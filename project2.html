@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Andrew Huddleston</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Andrew Huddleston</h1>
+    <p class="tagline">Computer Science Student, B.S.</p>
+
+    <nav>
+      <ul class="nav-menu">
+        <li><a href="index.html">Home</a></li>
+
+        <li class="dropdown">
+          <a href="#">Projects</a>
+          <ul class="dropdown-menu" aria-label="Projects submenu">
+            <li><a href="project1.html">Contact Manager</a></li>
+            <li><a href="project2.html">Campus Network Planner</a></li>
+          </ul>
+        </li>
+
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="about" class="flex-section">
+        <div class="about-text">
+            <h2>Campus Network Planner</h2>
+            <p>
+                For a junior-year programming assignment, I developed a Java program that builds a cost-efficient network connecting multiple universities. The program reads a file containing pairs of universities along with the travel costs between them, then uses Kruskal’s algorithm and a union-find structure to construct a minimum spanning tree. This ensures that all campuses are connected while minimizing the total travel cost. The output lists the selected connections, their individual costs, and the total cost of the network. This project gave me hands-on experience with graph theory, algorithm implementation, and managing data structures efficiently in Java.
+            </p>
+            <div class="code-box">
+                <pre><code>
+        import java.io.File;
+        import java.io.FileNotFoundException;
+        import java.util.*;
+
+        // Class for storing edge data and creating minheap
+        class Edge implements Comparable<Edge>
+        {
+            String u, v;
+            int cost;
+
+            public Edge(String u, String v, int cost)
+            {
+                this.u = u;
+                this.v = v;
+                this.cost = cost;
+            }
+
+            // Override compare function for minheap
+            @Override
+            public int compareTo(Edge w)
+            {
+                return Integer.compare(this.cost, w.cost);
+            }
+
+        }
+
+        public class CampusNetworkPlanner {
+
+            int E;
+            String fileName;
+
+            public CampusNetworkPlanner(int E, String fileName)
+            {
+                this.E = E;
+                this.fileName = fileName;
+            }
+
+            // Find the root parent of a vertex (campus)
+            String Find(String V, Map<String, String> parent) 
+            {
+                // If parent is different, set to root parent (compress path)
+                if (!parent.get(V).equals(V))
+                {
+                    parent.put(V, Find(parent.get(V), parent));
+                }
+
+                return parent.get(V);
+            }
+
+            // Connect two vertices (campuses)
+            void Union(String u, String v, Map<String, String> parent)
+            {
+                // Find roots of each vertex (campus)
+                String rootu = Find(u, parent);
+                String rootv = Find(v, parent);
+
+                // Join the roots
+                parent.put(rootv, rootu);
+            }
+
+            public String buildNetwork()
+            {
+                StringBuilder res = new StringBuilder();
+                ArrayList<String> pathsTaken = new ArrayList<>();
+                int totalCost = 0;
+
+                // Initialize minheap for paths and hashmap for parent/root vertices
+                PriorityQueue<Edge> minHeap = new PriorityQueue<>();
+                Map<String, String> parent = new HashMap<>();
+
+                // Parse data
+                try {
+                    Scanner fileScanner = new Scanner(new File(fileName));
+                    for (int i = 0; i < E; i++)
+                    {
+                        // Scan lines for edges
+                        String line = fileScanner.nextLine();
+                        String[] tok = line.split("\\s+");
+
+                        String u = tok[0];
+                        String v = tok[1];
+                        int cost = Integer.parseInt(tok[2]);
+
+                        // Add edge to minheap
+                        minHeap.add(new Edge(u, v, cost));
+
+                        // Find unique campuses and initialize parent to itself
+                        if (!parent.containsKey(u)) 
+                        {
+                            parent.put(u, u);
+                        }
+
+                        if (!parent.containsKey(v))
+                        {
+                            parent.put(v, v);
+                        }
+                    }
+                    fileScanner.close();
+                } catch (FileNotFoundException e) {
+                    System.out.println("Error: File not found.");
+                    return res.toString();
+                }
+
+                int V = parent.size();
+                int edgesUsed = 0;
+                
+                // Create spanning tree with V - 1 edges
+                while (edgesUsed < V - 1)
+                {
+                    // Pull lowest cost edge from minheap
+                    Edge e = minHeap.poll();
+
+                    String u = e.u;
+                    String v = e.v;
+
+                    String rootu = Find(u, parent);
+                    String rootv = Find(v, parent);
+                    
+                    // Connect vertices (campuses) if not already connected
+                    if (!rootu.equals(rootv))
+                    {
+                        Union(u, v, parent);
+
+                        // Sort lexicographically
+                        int compare = u.compareTo(v);
+                        if (compare < 0) pathsTaken.add(u + " " + v + " " + e.cost);
+                        else pathsTaken.add(v + " " + u + " " + e.cost);
+                        
+                        edgesUsed++;
+                        totalCost += e.cost;
+                    }
+                }
+                
+                // Sort lexicographically
+                Collections.sort(pathsTaken);
+            
+                // Append paths to result string and format
+                for (int i = 0; i < edgesUsed; i++) 
+                {
+                    String[] tok = pathsTaken.get(i).split("\\s+");
+                    res.append(String.format("%s\t$%s\n", tok[0] + "---" + tok[1], tok[2]));
+                }
+
+                res.append(String.format("\nTotal Cost: $%d\n", totalCost));
+
+                return res.toString();
+            }
+        }
+
+                </code></pre>
+            </div>
+        </div>
+    </section>
+
+  </main>
+
+    <footer>
+        <div id="contact" class="footer-container">
+            <p>© 2025 Andrew Huddleston</p>
+            <p>
+            Email: <a href="mailto:an235608@ucf.edu">an235608@ucf.edu</a>
+            GitHub: <a href="https://github.com/reslem" target="_blank">Reslem</a>
+            LinkedIn: <a href="https://www.linkedin.com/in/andrew-huddleston-3baa4b318/" target="_blank">Andrew Huddleston</a>
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>
